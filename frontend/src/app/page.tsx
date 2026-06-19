@@ -382,7 +382,7 @@ export default function Home() {
     if (!summaryText) return [];
     return summaryText
       .split('\n')
-      .map((line) => line.replace(/^-\s*/, '').trim())
+      .map((line) => line.replace(/^[•\-\*]\s*/, '').trim())
       .filter((line) => line.length > 0);
   };
 
