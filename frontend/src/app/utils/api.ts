@@ -117,9 +117,12 @@ export const loginUser = async (email: string, password: string): Promise<AuthRe
   return data;
 };
 
-export const uploadAudioFile = async (fileBlob: Blob, filename: string = 'recording.webm'): Promise<Learning> => {
+export const uploadAudioFile = async (fileBlob: Blob, filename: string = 'recording.webm', transcript?: string): Promise<Learning> => {
   const formData = new FormData();
   formData.append('file', fileBlob, filename);
+  if (transcript) {
+    formData.append('transcript', transcript);
+  }
 
   return restRequest<Learning>('/api/upload-audio', {
     method: 'POST',

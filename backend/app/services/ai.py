@@ -52,7 +52,7 @@ Rules:
 - Return ONLY valid JSON, nothing else."""
 
         response = client.models.generate_content(
-            model="gemini-2.0-flash",
+            model=settings.GEMINI_MODEL,
             contents=[prompt, audio_file],
         )
 
@@ -71,3 +71,44 @@ Rules:
     finally:
         # Clean up temporary file
         os.unlink(tmp_path)
+
+
+async def summarize_text(transcript: str) -> dict:
+    """
+    Send the transcript text directly to Gemini 2.0 Flash to generate a title, summary, and category.
+    """
+    client = _get_client()
+
+    prompt = f"""You are an AI assistant that processes voice note transcripts.
+Given the following transcript text, produce a valid JSON object containing a title, the original transcript, a bulleted summary, and a category.
+
+Transcript text:
+\"\"\"{transcript}\"\"\"
+
+Output format must be valid JSON:
+{{
+  "title": "A concise, descriptive title for this recording (max 10 words)",
+  "transcript": "The original transcript text (exactly as provided)",
+  "summary": "A clear, bulleted summary of the key points and learnings. Use '•' for bullet points.",
+  "category": "A single-word category tag, e.g. Technology, Business, Personal, Health, Education, Science, Finance, Engineering"
+}}
+
+Rules:
+- The transcript field must be identical to the provided transcript text.
+- Return ONLY valid JSON, nothing else."""
+
+    response = client.models.generate_content(
+        model=settings.GEMINI_MODEL,
+        contents=prompt,
+    )
+
+    text = response.text.strip()
+    if text.startswith("```"):
+        text = text.split("\n", 1)[1]
+        text = text.rsplit("```", 1)[0]
+        text = text.strip()
+
+    result = json.loads(text)
+    logger.info(f"Successfully processed transcript text: title='{result.get('title')}'")
+    return result
+

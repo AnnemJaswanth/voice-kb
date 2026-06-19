@@ -37,6 +37,7 @@ export default function Home() {
   const [isRecording, setIsRecording] = useState<boolean>(false);
   const [recordingDuration, setRecordingDuration] = useState<number>(0);
   const [uploading, setUploading] = useState<boolean>(false);
+  const [liveTranscript, setLiveTranscript] = useState<string>('');
   
   // Recorder Refs
   const mediaRecorderRef = useRef<MediaRecorder | null>(null);
@@ -46,6 +47,7 @@ export default function Home() {
   const analyserRef = useRef<AnalyserNode | null>(null);
   const animationFrameRef = useRef<number | null>(null);
   const visualizerBarsRef = useRef<HTMLDivElement[]>([]);
+  const recognitionRef = useRef<any>(null);
 
   // --- Toast/Notification State ---
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
@@ -170,6 +172,33 @@ export default function Home() {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
       audioChunksRef.current = [];
+      setLiveTranscript('');
+      let localTranscript = '';
+
+      // Initialize SpeechRecognition if supported
+      const SpeechRecognition = (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+      if (SpeechRecognition) {
+        const recognition = new SpeechRecognition();
+        recognition.continuous = true;
+        recognition.interimResults = true;
+        recognition.lang = 'en-US';
+
+        recognition.onresult = (event: any) => {
+          let accumulated = '';
+          for (let i = 0; i < event.results.length; ++i) {
+            accumulated += event.results[i][0].transcript + ' ';
+          }
+          localTranscript = accumulated.trim();
+          setLiveTranscript(localTranscript);
+        };
+
+        recognition.onerror = (event: any) => {
+          console.error('Speech recognition error', event.error);
+        };
+
+        recognitionRef.current = recognition;
+        recognition.start();
+      }
 
       // 1. Media Recorder setup
       // Try to use webm or fall back to container supported by browser
@@ -189,6 +218,16 @@ export default function Home() {
         // Clean up tracks
         stream.getTracks().forEach((track) => track.stop());
 
+        // Stop SpeechRecognition
+        if (recognitionRef.current) {
+          try {
+            recognitionRef.current.stop();
+          } catch (e) {
+            // ignore
+          }
+          recognitionRef.current = null;
+        }
+
         // Process audio chunks into blob
         const audioBlob = new Blob(audioChunksRef.current, { type: mediaRecorder.mimeType || 'audio/webm' });
         
@@ -196,7 +235,7 @@ export default function Home() {
         setUploading(true);
         showToast('Processing audio with Gemini AI...');
         try {
-          const newLearning = await uploadAudioFile(audioBlob, `recording_${Date.now()}.webm`);
+          const newLearning = await uploadAudioFile(audioBlob, `recording_${Date.now()}.webm`, localTranscript);
           showToast('Voice learning transcribed & summarized!');
           // Add to feed
           setLearnings((prev) => [newLearning, ...prev]);
@@ -204,6 +243,7 @@ export default function Home() {
           showToast(err.message || 'Failed to upload or summarize audio', 'error');
         } finally {
           setUploading(false);
+          setLiveTranscript('');
         }
       };
 
@@ -240,6 +280,16 @@ export default function Home() {
     if (mediaRecorderRef.current && isRecording) {
       mediaRecorderRef.current.stop();
       setIsRecording(false);
+    }
+
+    // Stop SpeechRecognition immediately if active
+    if (recognitionRef.current) {
+      try {
+        recognitionRef.current.stop();
+      } catch (e) {
+        // ignore
+      }
+      recognitionRef.current = null;
     }
 
     // Clean up timer
@@ -493,6 +543,26 @@ export default function Home() {
                       ></div>
                     ))}
                   </div>
+
+                  {isRecording && liveTranscript && (
+                    <div style={{
+                      marginTop: '1rem',
+                      padding: '0.8rem',
+                      background: 'rgba(255, 255, 255, 0.05)',
+                      borderRadius: '8px',
+                      fontSize: '0.85rem',
+                      color: 'rgba(255, 255, 255, 0.85)',
+                      fontStyle: 'italic',
+                      maxHeight: '100px',
+                      overflowY: 'auto',
+                      width: '100%',
+                      textAlign: 'left',
+                      borderLeft: '3px solid rgba(139, 92, 246, 0.5)'
+                    }}>
+                      <strong style={{ display: 'block', fontSize: '0.75rem', textTransform: 'uppercase', color: 'rgb(167, 139, 250)', marginBottom: '0.2rem', fontStyle: 'normal' }}>Live Transcript:</strong>
+                      {liveTranscript}...
+                    </div>
+                  )}
 
                   {uploading && (
                     <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '0.8rem', width: '100%', marginTop: '0.5rem' }}>
