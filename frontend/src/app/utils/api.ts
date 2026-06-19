@@ -65,7 +65,7 @@ export const setCurrentUser = (user: User | null) => {
 // Generic REST request helper
 async function restRequest<T>(path: string, options: RequestInit = {}): Promise<T> {
   const headers = new Headers(options.headers || {});
-  
+
   // Set auth header if token exists
   const token = getAuthToken();
   if (token && !headers.has('Authorization')) {
