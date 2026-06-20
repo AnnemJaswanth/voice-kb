@@ -14,6 +14,8 @@ export interface Learning {
   category: string | null;
   audioUrl: string | null;
   audioDuration: string | null;
+  keyConcepts: string | null;
+  actionItems: string | null;
   createdAt: string;
 }
 
@@ -124,10 +126,23 @@ export const uploadAudioFile = async (fileBlob: Blob, filename: string = 'record
     formData.append('transcript', transcript);
   }
 
-  return restRequest<Learning>('/api/upload-audio', {
+  const res = await restRequest<any>('/api/upload-audio', {
     method: 'POST',
     body: formData,
   });
+
+  return {
+    id: res.id,
+    title: res.title,
+    transcript: res.transcript,
+    summary: res.summary,
+    category: res.category,
+    audioUrl: res.audio_url,
+    audioDuration: res.audio_duration,
+    keyConcepts: res.key_concepts,
+    actionItems: res.action_items,
+    createdAt: res.created_at,
+  };
 };
 
 // Generic GraphQL requester
@@ -175,6 +190,8 @@ export const fetchMeWithLearnings = async (): Promise<{ me: User & { learnings: 
           category
           audioUrl
           audioDuration
+          keyConcepts
+          actionItems
           createdAt
         }
       }
@@ -192,4 +209,90 @@ export const deleteLearning = async (learningId: string): Promise<boolean> => {
   `;
   const result = await graphqlRequest<{ deleteLearning: boolean }>(query, { learningId });
   return result.deleteLearning;
+};
+
+// Chatbot Interfaces
+export interface ChatSource {
+  id: string;
+  title: string;
+}
+
+export interface ChatMessage {
+  id: string;
+  conversationId: string;
+  role: 'user' | 'assistant';
+  content: string;
+  sources: ChatSource[];
+  createdAt: string;
+}
+
+export interface Conversation {
+  id: string;
+  title: string;
+  createdAt: string;
+  messages: ChatMessage[];
+}
+
+// GraphQL Queries for Chat
+export const fetchConversations = async (): Promise<Conversation[]> => {
+  const query = `
+    query GetConversations {
+      conversations {
+        id
+        title
+        createdAt
+        messages {
+          id
+          conversationId
+          role
+          content
+          sources {
+            id
+            title
+          }
+          createdAt
+        }
+      }
+    }
+  `;
+  const result = await graphqlRequest<{ conversations: Conversation[] }>(query);
+  return result.conversations || [];
+};
+
+// GraphQL Mutations for Chat
+export const createConversation = async (title?: string): Promise<Conversation> => {
+  const query = `
+    mutation CreateConversation($title: String) {
+      createConversation(title: $title) {
+        id
+        title
+        createdAt
+        messages {
+          id
+        }
+      }
+    }
+  `;
+  const result = await graphqlRequest<{ createConversation: Conversation }>(query, { title });
+  return result.createConversation;
+};
+
+export const sendMessage = async (conversationId: string, content: string): Promise<ChatMessage> => {
+  const query = `
+    mutation SendMessage($conversationId: String!, $content: String!) {
+      sendMessage(conversationId: $conversationId, content: $content) {
+        id
+        conversationId
+        role
+        content
+        sources {
+          id
+          title
+        }
+        createdAt
+      }
+    }
+  `;
+  const result = await graphqlRequest<{ sendMessage: ChatMessage }>(query, { conversationId, content });
+  return result.sendMessage;
 };

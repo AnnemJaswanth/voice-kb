@@ -2,8 +2,36 @@ import strawberry
 from typing import List, Optional
 from sqlalchemy.orm import Session
 
-from app.schemas.types import UserType, LearningType
-from app.models import User as UserModel, Learning as LearningModel
+from app.schemas.types import UserType, LearningType, ConversationType, ChatMessageType, SourceType
+from app.models import User as UserModel, Learning as LearningModel, Conversation as ConversationModel, ChatMessage as ChatMessageModel
+
+
+def _message_to_type(m: ChatMessageModel) -> ChatMessageType:
+    """Convert a SQLAlchemy ChatMessage to a Strawberry ChatMessageType."""
+    sources_data = m.sources or []
+    sources = [SourceType(id=s.get("id", ""), title=s.get("title", "")) for s in sources_data]
+    return ChatMessageType(
+        id=str(m.id),
+        conversation_id=str(m.conversation_id),
+        role=m.role,
+        content=m.content,
+        sources=sources,
+        created_at=m.created_at,
+    )
+
+
+def _conversation_to_type(c: ConversationModel, include_messages: bool = False) -> ConversationType:
+    """Convert a SQLAlchemy Conversation to a Strawberry ConversationType."""
+    messages = []
+    if include_messages:
+        messages = [_message_to_type(m) for m in c.messages]
+    return ConversationType(
+        id=str(c.id),
+        user_id=str(c.user_id),
+        title=c.title,
+        created_at=c.created_at,
+        messages=messages,
+    )
 
 
 def _learning_to_type(l: LearningModel) -> LearningType:
@@ -17,6 +45,8 @@ def _learning_to_type(l: LearningModel) -> LearningType:
         category=l.category,
         audio_url=l.audio_url,
         audio_duration=l.audio_duration,
+        key_concepts=l.key_concepts,
+        action_items=l.action_items,
         created_at=l.created_at,
     )
 
@@ -80,3 +110,41 @@ class Query:
         if not l:
             return None
         return _learning_to_type(l)
+
+    @strawberry.field
+    def conversations(self, info: strawberry.types.Info) -> List[ConversationType]:
+        """Return all conversations for the authenticated user."""
+        db: Session = info.context.get("db")
+        user = info.context.get("user")
+        if not db or not user:
+            return []
+        results = (
+            db.query(ConversationModel)
+            .filter(ConversationModel.user_id == user.id)
+            .order_by(ConversationModel.created_at.desc())
+            .all()
+        )
+        return [_conversation_to_type(c, include_messages=True) for c in results]
+
+    @strawberry.field
+    def messages(self, info: strawberry.types.Info, conversation_id: str) -> List[ChatMessageType]:
+        """Return message history for a given conversation."""
+        db: Session = info.context.get("db")
+        user = info.context.get("user")
+        if not db or not user:
+            return []
+        # Verify ownership
+        conv = (
+            db.query(ConversationModel)
+            .filter(ConversationModel.id == conversation_id, ConversationModel.user_id == user.id)
+            .first()
+        )
+        if not conv:
+            return []
+        results = (
+            db.query(ChatMessageModel)
+            .filter(ChatMessageModel.conversation_id == conversation_id)
+            .order_by(ChatMessageModel.created_at.asc())
+            .all()
+        )
+        return [_message_to_type(m) for m in results]

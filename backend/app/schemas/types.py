@@ -13,6 +13,8 @@ class LearningType:
     category: Optional[str] = None
     audio_url: Optional[str] = None
     audio_duration: Optional[str] = None
+    key_concepts: Optional[str] = None
+    action_items: Optional[str] = None
     created_at: datetime
 
 
@@ -23,3 +25,28 @@ class UserType:
     email: str
     created_at: datetime
     learnings: List[LearningType]
+
+
+@strawberry.type
+class SourceType:
+    id: str
+    title: str
+
+
+@strawberry.type
+class ChatMessageType:
+    id: str
+    conversation_id: str
+    role: str
+    content: str
+    sources: List[SourceType]
+    created_at: datetime
+
+
+@strawberry.type
+class ConversationType:
+    id: str
+    user_id: str
+    title: str
+    created_at: datetime
+    messages: List[ChatMessageType]

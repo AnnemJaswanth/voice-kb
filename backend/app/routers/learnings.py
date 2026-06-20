@@ -6,7 +6,7 @@ from typing import Optional
 from app.database import get_db
 from app.dependencies import get_current_user
 from app.models import User, Learning
-from app.services.ai import process_audio, summarize_text
+from app.services.ai import process_audio, summarize_text, generate_embedding, build_embedding_text
 from app.services.storage import upload_audio_to_cloudinary
 
 logger = logging.getLogger(__name__)
@@ -76,13 +76,24 @@ async def upload_audio(
             detail=f"Failed to process learning: {str(e)}",
         )
 
-    # 3. Store in database
+    # 3. Generate embedding for semantic search
+    embedding = None
+    try:
+        embedding_text = build_embedding_text(ai_result)
+        embedding = await generate_embedding(embedding_text)
+    except Exception as e:
+        logger.error(f"Embedding generation failed: {e}. Saving without embedding.")
+
+    # 4. Store in database
     learning = Learning(
         user_id=current_user.id,
         title=ai_result.get("title", "Untitled"),
         transcript=ai_result.get("transcript", ""),
         summary=ai_result.get("summary", ""),
         category=ai_result.get("category"),
+        key_concepts=ai_result.get("key_concepts"),
+        action_items=ai_result.get("action_items"),
+        embedding=embedding,
         audio_url=cloud_result.get("url"),
         audio_public_id=cloud_result.get("public_id"),
         audio_duration=cloud_result.get("duration"),
@@ -97,6 +108,8 @@ async def upload_audio(
         "transcript": learning.transcript,
         "summary": learning.summary,
         "category": learning.category,
+        "key_concepts": learning.key_concepts,
+        "action_items": learning.action_items,
         "audio_url": learning.audio_url,
         "audio_duration": learning.audio_duration,
         "created_at": learning.created_at.isoformat(),
