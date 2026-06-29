@@ -15,6 +15,7 @@ class LearningType:
     audio_duration: Optional[str] = None
     key_concepts: Optional[str] = None
     action_items: Optional[str] = None
+    topics: Optional[List[str]] = None
     created_at: datetime
 
 
@@ -31,6 +32,9 @@ class UserType:
 class SourceType:
     id: str
     title: str
+    category: Optional[str] = None
+    created_at: Optional[str] = None
+    similarity: Optional[float] = None
 
 
 @strawberry.type
@@ -40,6 +44,7 @@ class ChatMessageType:
     role: str
     content: str
     sources: List[SourceType]
+    follow_up_questions: Optional[List[str]] = None
     created_at: datetime
 
 
@@ -50,3 +55,18 @@ class ConversationType:
     title: str
     created_at: datetime
     messages: List[ChatMessageType]
+
+
+@strawberry.type
+class TopicType:
+    id: str
+    name: str
+    learning_count: int
+
+
+@strawberry.type
+class RelatedLearningType:
+    id: str
+    title: str
+    category: str
+    similarity: float

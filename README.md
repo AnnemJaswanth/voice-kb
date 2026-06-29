@@ -1,6 +1,6 @@
 # VoiceKB Roadmap & Checklist (Updated)
 
-## 🟢 Phase 1: Capture & Summarize (MVP) – Done
+## 🟢 Phase 1: Capture & Summarize (Completed)
 
 ### Audio Input
 
@@ -22,27 +22,23 @@
 
 ---
 
-# 🟡 Phase 2: Search, Embeddings & Personal Chatbot (RAG)
+# 🟡 Phase 2: Search, Embeddings & Personal Chatbot (Completed)
 
 ## Search
 
-* [✓] Full-text / keyword search
+* [✓] Full-text / Keyword search
 * [✓] Category filtering
 * [✓] Date filtering
 
 ## Knowledge Extraction
 
 * [✓] Topic extraction
-* [✓] Generate embeddings for:
-
-  * Transcript
-  * Summary
-  * Concepts
+* [✓] Embedding generation
+* [✓] Semantic retrieval
 
 ## Vector Search
 
-* [✓] Setup pgvector or Qdrant
-* [✓] Semantic search
+* [✓] pgvector integration
 * [✓] Related note retrieval
 
 ## Personal Chatbot
@@ -50,264 +46,176 @@
 * [✓] Personal RAG chatbot
 * [✓] Chat history persistence
 * [✓] Conversation management
-* [✓] Source references in answers
-
-Example:
-
-User:
-"What did I learn about PostgreSQL?"
-
-VoiceKB:
-
-* Retrieved 5 relevant learnings
-* Generated answer from stored knowledge
-* Linked source notes
+* [✓] Source citations
 
 ---
 
-# 🔵 Phase 3: Knowledge Organization & Discovery
+# 🔵 Phase 3: Knowledge Organization & Discovery (Completed)
 
 ## Topic Organization
 
-* [ ] Topics table
-* [ ] Learning-to-topic mapping
-* [ ] Hierarchical topics
-
-Example:
-
-Backend
-├── FastAPI
-├── GraphQL
-└── PostgreSQL
+* [✓] Topics table
+* [✓] Learning-topic mapping
+* [✓] Broad topic hierarchy
 
 ## Discovery
 
-* [ ] Related learning detection
-* [ ] Similar learning suggestions
-* [ ] Topic-based browsing
+* [✓] Related learnings
+* [✓] Similar learning suggestions
+* [✓] Topic browsing
 
-## Future Graph Support
+## Foundation
 
-* [ ] Concept relationships table
-* [ ] Topic relationships table
-
-Example:
-
-FastAPI → GraphQL
-GraphQL → Resolvers
+* [ ] Concept relationship table
+* [ ] Topic relationship table
 
 ---
 
-# 🔵 Phase 4: Shared Workspaces
+# 🟣 Phase 4: AI Knowledge Assistant
 
-## Workspaces
+## Smarter Retrieval
 
-* [ ] Create workspaces
-* [ ] Join workspaces
-* [ ] Invite members
+* [ ] Query rewriting before embedding generation
+* [ ] Hybrid search (Keyword + Vector Search)
+* [ ] Retrieve Top-K then rerank
+* [ ] Dynamic similarity thresholds
+* [ ] Better context selection
 
-## Permissions
+## Intelligent Chatbot
 
-* [ ] Owner role
-* [ ] Editor role
-* [ ] Viewer role
+* [ ] Intent detection
+* [ ] Streaming responses
+* [ ] Follow-up question suggestions
+* [ ] Better source citations
+* [ ] Multi-turn reasoning
 
-## Sharing
+## Knowledge Queries
 
-* [ ] Share learnings
-* [ ] Workspace search
+Support questions like
 
-## Database
+* [ ] What have I learned about PostgreSQL?
+* [ ] Compare GraphQL and REST from my notes.
+* [ ] What backend topics have I learned?
+* [ ] Summarize everything I learned this month.
+* [ ] What did I learn last week?
+* [ ] What are my most studied topics?
+* [ ] Which concepts appear most frequently?
+* [ ] What are all my action items?
 
-* [ ] workspaces
-* [ ] workspace_members
-* [ ] workspace_learnings
+## Smart Insights
 
----
-
-# 🔵 Phase 5: Collaborative Knowledge Foundation
-
-## Collaboration
-
-* [ ] Duplicate detection
-* [ ] Similar note detection
-* [ ] Source attribution
-
-Example:
-
-GraphQL Resolvers
-
-Sources:
-
-* Jaswanth
-* Ravi
-* Arjun
-
-## Team Discovery
-
-* [ ] Related team learnings
-* [ ] Contributor insights
+* [ ] Weekly learning summary
+* [ ] Monthly learning summary
+* [ ] Topic-wise summaries
+* [ ] Learning timeline
+* [ ] Recently learned concepts
 
 ---
 
-# 🟣 Phase 6: Team Q&A Chatbot (Collaborative RAG)
-
-## Workspace Chatbot
-
-* [ ] Query across workspace knowledge
-* [ ] Team knowledge retrieval
-* [ ] Workspace conversation history
-
-## Answer Generation
-
-* [ ] Source citations
-* [ ] Related learning recommendations
-
-Example:
-
-Answer:
-"GraphQL resolvers are functions that..."
-
-Sources:
-
-* GraphQL Basics
-* Backend Session 2
-* Team Recording 5
-
----
-
-# 🟣 Phase 7: Live Learning Mode
-
-## Real-Time Processing
-
-* [ ] Live transcription
-* [ ] Live summary generation
-* [ ] Live concept extraction
-* [ ] Live topic detection
-
-## Streaming
-
-* [ ] WebSocket support
-* [ ] Real-time updates
-
----
-
-# 🔴 Phase 8: Learning Intelligence
+# 🔴 Phase 5: Learning Intelligence
 
 ## Revision Engine
 
-* [ ] Revision reminders
 * [ ] Spaced repetition
+* [ ] Revision reminders
+* [ ] Revision dashboard
 
 ## Knowledge Intelligence
 
 * [ ] Knowledge gap detection
-* [ ] Related concept recommendations
 * [ ] Topic mastery tracking
-
-## User Analytics
-
 * [ ] Learning streaks
-* [ ] Progress tracking
-* [ ] Revision history
+* [ ] Progress analytics
+* [ ] Related concept recommendations
 
-## Infrastructure
+## Personal Analytics
 
-* [ ] Notification service
-* [ ] Reminder scheduler
-* [ ] Background jobs
+* [ ] Most learned categories
+* [ ] Learning trends
+* [ ] Recording frequency
+* [ ] Topic growth over time
 
 ---
 
-# 🔴 Phase 9: Knowledge Graph
+# 🟣 Phase 6: Live Learning Mode
 
-## Graph Construction
+## Real-Time Processing
 
-* [ ] Build graph from concepts
-* [ ] Build graph from topics
+* [ ] Live transcription
+* [ ] Live summaries
+* [ ] Live concept extraction
+* [ ] Live topic extraction
+
+## Streaming
+
+* [ ] WebSocket support
+* [ ] Live AI updates
+
+---
+
+# 🔴 Phase 7: Knowledge Graph
+
+## Knowledge Relationships
+
+* [ ] Concept graph
+* [ ] Topic graph
 * [ ] Auto-generated relationships
 
 ## Visualization
 
-* [ ] Interactive graph view
-* [ ] Node navigation
-* [ ] Topic exploration
-
-Example:
-
-Backend
-|
-FastAPI
-|
-GraphQL
-|
-Resolvers
+* [ ] Interactive graph
+* [ ] Topic navigation
+* [ ] Concept exploration
 
 ---
 
-# 🔴 Phase 10: AI Learning Coach
+# 🔴 Phase 8: AI Learning Coach
 
-## Study Assistance
+## Personalized Coaching
 
 * [ ] Personalized study plans
-* [ ] Learning recommendations
-
-## Interview Preparation
-
-* [ ] Interview question generation
-* [ ] Mock interviews
-
-## Assessments
-
+* [ ] Daily learning recommendations
+* [ ] Interview preparation
 * [ ] Quiz generation
-* [ ] Practice tests
-
-## Learning Tools
-
 * [ ] Flashcard generation
 * [ ] Revision notes
-* [ ] Topic summaries
+* [ ] Practice sessions
 
 ---
 
 # Recommended Technology Stack
 
-Frontend
+### Frontend
 
 * Next.js
 * TypeScript
-* Tailwind
+* TailwindCSS
 
-Backend
+### Backend
 
 * FastAPI
 
-Database
+### Database
 
-* PostgreSQL
+* PostgreSQL + pgvector
 
-Storage
+### Storage
 
 * Cloudinary
 
-Embeddings
-
-* Gemini Embeddings
-
-Vector Search
-
-* pgvector (initially)
-* Qdrant (later)
-
-LLM
+### LLM
 
 * Gemini
 
-Future Agent Framework
+### Prompt Optimization
+
+* DSPy
+
+### Agent Framework
 
 * LangGraph
 
-Deployment
+### Deployment
 
 * Vercel
 * Render
@@ -317,38 +225,34 @@ Deployment
 
 # Version Mapping
 
-V1
+### V1
 
-* Phase 1
+Phase 1 – Capture & Summarize
 
-V2
+### V2
 
-* Phase 2
+Phase 2 – Search, Embeddings & Personal Chatbot
 
-V3
+### V3
 
-* Phase 3
+Phase 3 – Knowledge Organization
 
-V4
+### V4
 
-* Phase 4
+Phase 4 – AI Knowledge Assistant
 
-V5
+### V5
 
-* Phase 5 + Phase 6
+Phase 5 – Learning Intelligence
 
-V6
+### V6
 
-* Phase 7
+Phase 6 – Live Learning
 
-V7
+### V7
 
-* Phase 8
+Phase 7 – Knowledge Graph
 
-V8
+### V8
 
-* Phase 9
-
-V9
-
-* Phase 10
+Phase 8 – AI Learning Coach

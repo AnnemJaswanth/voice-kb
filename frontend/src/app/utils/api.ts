@@ -16,7 +16,21 @@ export interface Learning {
   audioDuration: string | null;
   keyConcepts: string | null;
   actionItems: string | null;
+  topics: string[];
   createdAt: string;
+}
+
+export interface Topic {
+  id: string;
+  name: string;
+  learningCount: number;
+}
+
+export interface RelatedLearning {
+  id: string;
+  title: string;
+  category: string;
+  similarity: number;
 }
 
 export interface AuthResponse {
@@ -141,6 +155,7 @@ export const uploadAudioFile = async (fileBlob: Blob, filename: string = 'record
     audioDuration: res.audio_duration,
     keyConcepts: res.key_concepts,
     actionItems: res.action_items,
+    topics: res.topics || [],
     createdAt: res.created_at,
   };
 };
@@ -192,6 +207,7 @@ export const fetchMeWithLearnings = async (): Promise<{ me: User & { learnings: 
           audioDuration
           keyConcepts
           actionItems
+          topics
           createdAt
         }
       }
@@ -215,6 +231,9 @@ export const deleteLearning = async (learningId: string): Promise<boolean> => {
 export interface ChatSource {
   id: string;
   title: string;
+  category?: string;
+  similarity?: number;
+  createdAt?: string;
 }
 
 export interface ChatMessage {
@@ -223,6 +242,7 @@ export interface ChatMessage {
   role: 'user' | 'assistant';
   content: string;
   sources: ChatSource[];
+  followUpQuestions?: string[];
   createdAt: string;
 }
 
@@ -249,7 +269,11 @@ export const fetchConversations = async (): Promise<Conversation[]> => {
           sources {
             id
             title
+            category
+            similarity
+            createdAt
           }
+          followUpQuestions
           createdAt
         }
       }
@@ -288,11 +312,68 @@ export const sendMessage = async (conversationId: string, content: string): Prom
         sources {
           id
           title
+          category
+          similarity
+          createdAt
         }
+        followUpQuestions
         createdAt
       }
     }
   `;
   const result = await graphqlRequest<{ sendMessage: ChatMessage }>(query, { conversationId, content });
   return result.sendMessage;
+};
+
+// ── Phase 3: Topics & Related Learnings ────────────────────────────────────
+
+export const fetchTopics = async (): Promise<Topic[]> => {
+  const query = `
+    query GetTopics {
+      topics {
+        id
+        name
+        learningCount
+      }
+    }
+  `;
+  const result = await graphqlRequest<{ topics: Topic[] }>(query);
+  return result.topics || [];
+};
+
+export const fetchTopicLearnings = async (topicId: string): Promise<Learning[]> => {
+  const query = `
+    query GetTopicLearnings($topicId: String!) {
+      topicLearnings(topicId: $topicId) {
+        id
+        title
+        transcript
+        summary
+        category
+        audioUrl
+        audioDuration
+        keyConcepts
+        actionItems
+        topics
+        createdAt
+      }
+    }
+  `;
+  const result = await graphqlRequest<{ topicLearnings: Learning[] }>(query, { topicId });
+  return result.topicLearnings || [];
+};
+
+export const fetchRelatedLearnings = async (learningId: string): Promise<RelatedLearning[]> => {
+  const query = `
+    query GetRelatedLearnings($learningId: String!) {
+      relatedLearnings(learningId: $learningId) {
+        id
+        title
+        category
+        similarity
+      }
+    }
+  `;
+  const result = await graphqlRequest<{ relatedLearnings: RelatedLearning[] }>(query, { learningId });
+  return result.relatedLearnings || [];
 };

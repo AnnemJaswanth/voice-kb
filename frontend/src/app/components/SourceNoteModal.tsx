@@ -1,14 +1,36 @@
 'use client';
 
-import React from 'react';
-import { Learning } from '../utils/api';
+import React, { useEffect, useState } from 'react';
+import { Learning, RelatedLearning, fetchRelatedLearnings } from '../utils/api';
 
 interface SourceNoteModalProps {
   learning: Learning | null;
   onClose: () => void;
+  onOpenSource?: (id: string) => void;
 }
 
-export default function SourceNoteModal({ learning, onClose }: SourceNoteModalProps) {
+export default function SourceNoteModal({ learning, onClose, onOpenSource }: SourceNoteModalProps) {
+  const [relatedLearnings, setRelatedLearnings] = useState<RelatedLearning[]>([]);
+  const [relatedLoading, setRelatedLoading] = useState(false);
+
+  useEffect(() => {
+    if (learning) {
+      loadRelated(learning.id);
+    }
+  }, [learning]);
+
+  const loadRelated = async (id: string) => {
+    setRelatedLoading(true);
+    try {
+      const result = await fetchRelatedLearnings(id);
+      setRelatedLearnings(result);
+    } catch (err) {
+      console.error('Failed to load related learnings:', err);
+    } finally {
+      setRelatedLoading(false);
+    }
+  };
+
   if (!learning) return null;
 
   // Helper to parse summary bullets
@@ -59,6 +81,25 @@ export default function SourceNoteModal({ learning, onClose }: SourceNoteModalPr
             </div>
           </div>
 
+          {/* Topics */}
+          {learning.topics && learning.topics.length > 0 && (
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.4rem', marginTop: '0.5rem' }}>
+              {learning.topics.map((topic, i) => (
+                <span key={i} style={{
+                  padding: '0.25rem 0.6rem',
+                  borderRadius: '100px',
+                  fontSize: '0.75rem',
+                  fontWeight: 600,
+                  background: 'rgba(139, 92, 246, 0.12)',
+                  color: 'var(--primary)',
+                  border: '1px solid rgba(139, 92, 246, 0.25)',
+                }}>
+                  {topic}
+                </span>
+              ))}
+            </div>
+          )}
+
           {/* Audio Player */}
           {learning.audioUrl && (
             <div className="audio-player-wrapper">
@@ -108,6 +149,65 @@ export default function SourceNoteModal({ learning, onClose }: SourceNoteModalPr
             <div className="transcript-content" style={{ maxHeight: '150px', display: 'block' }}>
               {learning.transcript || 'No transcript generated.'}
             </div>
+          </div>
+
+          {/* Related Learnings */}
+          <div style={{ marginTop: '1rem' }}>
+            <div className="section-label">Related Learnings</div>
+            {relatedLoading ? (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', padding: '0.5rem 0' }}>
+                <div className="spinner" style={{ width: '16px', height: '16px', borderWidth: '2px' }}></div>
+                <span style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>Finding related notes...</span>
+              </div>
+            ) : relatedLearnings.length === 0 ? (
+              <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', padding: '0.5rem 0' }}>
+                No related learnings found.
+              </p>
+            ) : (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                {relatedLearnings.map((rl) => (
+                  <button
+                    key={rl.id}
+                    onClick={() => onOpenSource && onOpenSource(rl.id)}
+                    style={{
+                      background: 'rgba(255, 255, 255, 0.03)',
+                      border: '1px solid var(--border-color)',
+                      borderRadius: '12px',
+                      padding: '0.75rem 1rem',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                      transition: 'all 0.2s',
+                      textAlign: 'left',
+                      width: '100%',
+                      color: 'var(--text-main)',
+                    }}
+                    onMouseOver={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border-hover)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.06)';
+                    }}
+                    onMouseOut={(e) => {
+                      e.currentTarget.style.borderColor = 'var(--border-color)';
+                      e.currentTarget.style.background = 'rgba(255, 255, 255, 0.03)';
+                    }}
+                  >
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                      <span style={{ fontWeight: 600, fontSize: '0.9rem' }}>{rl.title}</span>
+                      <span style={{ fontSize: '0.75rem', color: 'var(--text-muted)' }}>{rl.category}</span>
+                    </div>
+                    <span style={{
+                      fontSize: '0.8rem',
+                      fontWeight: 600,
+                      color: rl.similarity > 75 ? 'var(--primary)' : 'var(--text-muted)',
+                      whiteSpace: 'nowrap',
+                    }}>
+                      {rl.similarity}% Match
+                    </span>
+                  </button>
+                ))}
+              </div>
+            )}
           </div>
         </div>
       </div>

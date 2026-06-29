@@ -97,17 +97,16 @@ EMBEDDING_MODEL = "gemini-embedding-2"
 
 def build_embedding_text(learning_data: dict) -> str:
     """
-    Combine learning fields into a single text block for embedding.
-    This ensures the vector captures title, summary, concepts, and transcript.
+    Combine learning fields into a structured text block for embedding.
+    Excludes the full transcript to improve retrieval quality.
     """
-    parts = [
-        learning_data.get("title", ""),
-        learning_data.get("category", ""),
-        learning_data.get("summary", ""),
-        learning_data.get("key_concepts", ""),
-        learning_data.get("transcript", ""),
-    ]
-    return "\n".join(p for p in parts if p)
+    title = learning_data.get("title", "No Title")
+    category = learning_data.get("category", "Uncategorized")
+    topics = learning_data.get("topics", "None")
+    concepts = learning_data.get("key_concepts", "None")
+    summary = learning_data.get("summary", "No Summary")
+    
+    return f"Title:\n{title}\n\nCategory:\n{category}\n\nTopics:\n{topics}\n\nConcepts:\n{concepts}\n\nSummary:\n{summary}"
 
 
 async def generate_embedding(text: str) -> list[float]:

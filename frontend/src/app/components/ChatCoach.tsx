@@ -122,20 +122,70 @@ export default function ChatCoach({
                   {msg.role === 'assistant' && msg.sources && msg.sources.length > 0 && (
                     <div className="message-sources">
                       <span className="sources-label">Cited Sources:</span>
-                      {msg.sources.map((src) => (
-                        <button
-                          key={src.id}
-                          onClick={() => onOpenSource(src.id)}
-                          className="source-badge"
-                          title={`Click to view: ${src.title}`}
-                        >
-                          <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
-                            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-                            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-                          </svg>
-                          {src.title}
-                        </button>
-                      ))}
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        {msg.sources.map((src) => (
+                          <button
+                            key={src.id}
+                            onClick={() => onOpenSource(src.id)}
+                            className="source-badge"
+                            title={`Click to view: ${src.title}`}
+                            style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-start', padding: '0.4rem 0.6rem' }}
+                          >
+                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                              <svg xmlns="http://www.w3.org/2000/svg" width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ flexShrink: 0 }}>
+                                <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+                                <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+                              </svg>
+                              <span style={{ fontWeight: 600 }}>{src.title}</span>
+                            </div>
+                            <div style={{ display: 'flex', gap: '0.5rem', fontSize: '0.75rem', color: 'var(--text-muted)', marginTop: '0.2rem' }}>
+                              {src.category && <span>{src.category}</span>}
+                              {src.similarity !== undefined && (
+                                <span style={{ color: src.similarity > 75 ? 'var(--primary)' : 'inherit', fontWeight: src.similarity > 75 ? 600 : 400 }}>
+                                  {src.similarity}% Match
+                                </span>
+                              )}
+                            </div>
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+
+                  {/* Suggested Follow-up Questions */}
+                  {msg.role === 'assistant' && msg.followUpQuestions && msg.followUpQuestions.length > 0 && (
+                    <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
+                      <span style={{ fontSize: '0.8rem', color: 'var(--text-muted)', fontWeight: 600 }}>You may also ask:</span>
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem' }}>
+                        {msg.followUpQuestions.map((fq, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => {
+                              // Setting input and triggering send
+                              onChangeChatInput(fq);
+                              // A bit hacky but works for instant send if we can't trigger the form directly here
+                              setTimeout(() => {
+                                const form = viewportRef.current?.parentElement?.querySelector('.chat-input-form') as HTMLFormElement;
+                                if (form) form.requestSubmit();
+                              }, 50);
+                            }}
+                            style={{
+                              background: 'var(--bg-card)',
+                              border: '1px solid var(--border-light)',
+                              borderRadius: '1rem',
+                              padding: '0.4rem 0.8rem',
+                              fontSize: '0.85rem',
+                              color: 'var(--text-dark)',
+                              cursor: 'pointer',
+                              transition: 'all 0.2s',
+                            }}
+                            onMouseOver={(e) => (e.currentTarget.style.borderColor = 'var(--primary)')}
+                            onMouseOut={(e) => (e.currentTarget.style.borderColor = 'var(--border-light)')}
+                          >
+                            {fq}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                 </div>

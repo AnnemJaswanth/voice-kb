@@ -5,7 +5,7 @@ from typing import Optional
 
 from app.database import get_db
 from app.dependencies import get_current_user
-from app.models import User, Learning
+from app.models import User, Learning, Topic, learning_topics
 from app.services.ai import process_audio, summarize_text, generate_embedding, build_embedding_text
 from app.services.storage import upload_audio_to_cloudinary
 
@@ -24,13 +24,12 @@ async def upload_audio(
     """
     Upload an audio file for transcription and summarisation.
 
-    This is the only REST endpoint for learnings — all reads and deletes
-    go through GraphQL.
-
     Flow:
     1. Upload audio to Cloudinary for permanent storage.
-    2. Send audio to Gemini for transcription + summary.
+    2. Send audio to Gemini for transcription + summary + topics.
     3. Store the result in PostgreSQL.
+    4. Create/reuse topic records and link to learning.
+    5. Generate embedding.
     """
     # Validate file type
     base_content_type = file.content_type.split(";")[0].strip() if file.content_type else None
@@ -84,7 +83,7 @@ async def upload_audio(
     except Exception as e:
         logger.error(f"Embedding generation failed: {e}. Saving without embedding.")
 
-    # 4. Store in database
+    # 4. Store learning in database
     learning = Learning(
         user_id=current_user.id,
         title=ai_result.get("title", "Untitled"),
@@ -102,6 +101,34 @@ async def upload_audio(
     db.commit()
     db.refresh(learning)
 
+    # 5. Create/reuse topic records and link to learning
+    topics_str = ai_result.get("topics", "")
+    if topics_str:
+        topic_names = [t.strip() for t in topics_str.split(",") if t.strip()]
+        for topic_name in topic_names:
+            # Find or create topic
+            topic = db.query(Topic).filter(Topic.name == topic_name).first()
+            if not topic:
+                topic = Topic(name=topic_name)
+                db.add(topic)
+                db.flush()
+            # Link learning to topic
+            existing_link = db.execute(
+                learning_topics.select().where(
+                    learning_topics.c.learning_id == learning.id,
+                    learning_topics.c.topic_id == topic.id,
+                )
+            ).first()
+            if not existing_link:
+                db.execute(
+                    learning_topics.insert().values(
+                        learning_id=learning.id,
+                        topic_id=topic.id,
+                    )
+                )
+        db.commit()
+        logger.info(f"Linked learning {learning.id} to topics: {topic_names}")
+
     return {
         "id": str(learning.id),
         "title": learning.title,
@@ -112,5 +139,6 @@ async def upload_audio(
         "action_items": learning.action_items,
         "audio_url": learning.audio_url,
         "audio_duration": learning.audio_duration,
+        "topics": [t.name for t in learning.topics],
         "created_at": learning.created_at.isoformat(),
     }

@@ -59,7 +59,29 @@ CREATE TABLE IF NOT EXISTS chat_messages (
     role            VARCHAR(50) NOT NULL,
     content         TEXT NOT NULL,
     sources         JSONB,
+    follow_up_questions JSONB,
     created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
 CREATE INDEX IF NOT EXISTS idx_chat_messages_conversation_id ON chat_messages (conversation_id);
+
+
+-- 5. Topics table (Phase 3)
+CREATE TABLE IF NOT EXISTS topics (
+    id          UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+    name        VARCHAR(200) NOT NULL UNIQUE,
+    created_at  TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
+CREATE INDEX IF NOT EXISTS idx_topics_name ON topics (name);
+
+
+-- 6. Learning to Topics Mapping (Phase 3)
+CREATE TABLE IF NOT EXISTS learning_topics (
+    learning_id UUID NOT NULL REFERENCES learnings(id) ON DELETE CASCADE,
+    topic_id    UUID NOT NULL REFERENCES topics(id) ON DELETE CASCADE,
+    PRIMARY KEY (learning_id, topic_id)
+);
+
+CREATE INDEX IF NOT EXISTS idx_learning_topics_learning_id ON learning_topics (learning_id);
+CREATE INDEX IF NOT EXISTS idx_learning_topics_topic_id ON learning_topics (topic_id);

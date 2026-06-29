@@ -24,6 +24,7 @@ import SourceNoteModal from './components/SourceNoteModal';
 import AuthScreen from './components/AuthScreen';
 import SidebarRecorder from './components/SidebarRecorder';
 import LearningFeed from './components/LearningFeed';
+import TopicsBrowser from './components/TopicsBrowser';
 
 export default function Home() {
   const hasFetchedRef = useRef(false);
@@ -41,7 +42,7 @@ export default function Home() {
   const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
 
   // --- Tab State ---
-  const [activeTab, setActiveTab] = useState<'feed' | 'chat'>('feed');
+  const [activeTab, setActiveTab] = useState<'feed' | 'chat' | 'topics'>('feed');
 
   // --- Chat State ---
   const [conversations, setConversations] = useState<Conversation[]>([]);
@@ -334,6 +335,12 @@ export default function Home() {
                   My Notes Feed
                 </button>
                 <button
+                  onClick={() => setActiveTab('topics')}
+                  className={`tab-nav-btn ${activeTab === 'topics' ? 'active' : ''}`}
+                >
+                  Topics
+                </button>
+                <button
                   onClick={() => setActiveTab('chat')}
                   className={`tab-nav-btn ${activeTab === 'chat' ? 'active' : ''}`}
                 >
@@ -347,6 +354,11 @@ export default function Home() {
                   dataLoading={dataLoading} 
                   onDeleteLearning={handleDelete} 
                   onOpenSource={handleOpenSourceModal}
+                />
+              ) : activeTab === 'topics' ? (
+                <TopicsBrowser
+                  onOpenSource={handleOpenSourceModal}
+                  onDeleteLearning={handleDelete}
                 />
               ) : (
                 <ChatCoach
@@ -378,6 +390,7 @@ export default function Home() {
         <SourceNoteModal
           learning={sourceModalLearning}
           onClose={() => setSourceModalLearning(null)}
+          onOpenSource={handleOpenSourceModal}
         />
       )}
     </>

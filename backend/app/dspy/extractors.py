@@ -52,6 +52,11 @@ class ExtractLearning(dspy.Signature):
              "Use '•' for bullet points. Each item on its own line. "
              "Return empty string if none found."
     )
+    topics: str = dspy.OutputField(
+        desc="A comma-separated list of 3-5 broad high-level topics that this learning covers. "
+             "Topics should be broader than concepts. For example: 'GraphQL, API, Backend Development'. "
+             "Return empty string if none found."
+    )
 
 
 # ── DSPy Module ─────────────────────────────────────────────────────────────
@@ -89,6 +94,7 @@ def extract_learning_from_transcript(transcript: str) -> dict:
         "category": result.category,
         "key_concepts": result.key_concepts,
         "action_items": result.action_items,
+        "topics": result.topics,
     }
 
     logger.info(f"DSPy extraction complete: title='{extracted['title']}', category='{extracted['category']}'")

@@ -1,10 +1,19 @@
 import uuid
-from sqlalchemy import Column, String, Text, DateTime, ForeignKey
+from sqlalchemy import Column, String, Text, DateTime, ForeignKey, Table
 from sqlalchemy.dialects.postgresql import UUID, JSONB
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 from pgvector.sqlalchemy import Vector
 from app.database import Base
+
+
+# ── Association table for many-to-many Learning ↔ Topic ─────────────────────
+learning_topics = Table(
+    "learning_topics",
+    Base.metadata,
+    Column("learning_id", UUID(as_uuid=True), ForeignKey("learnings.id", ondelete="CASCADE"), primary_key=True),
+    Column("topic_id", UUID(as_uuid=True), ForeignKey("topics.id", ondelete="CASCADE"), primary_key=True),
+)
 
 
 class User(Base):
@@ -19,6 +28,17 @@ class User(Base):
     # Relationships
     learnings = relationship("Learning", back_populates="user", cascade="all, delete-orphan")
     conversations = relationship("Conversation", back_populates="user", cascade="all, delete-orphan")
+
+
+class Topic(Base):
+    __tablename__ = "topics"
+
+    id = Column(UUID(as_uuid=True), primary_key=True, default=uuid.uuid4, index=True)
+    name = Column(String(200), unique=True, nullable=False)
+    created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Relationships
+    learnings = relationship("Learning", secondary=learning_topics, back_populates="topics")
 
 
 class Learning(Base):
@@ -40,6 +60,7 @@ class Learning(Base):
 
     # Relationships
     user = relationship("User", back_populates="learnings")
+    topics = relationship("Topic", secondary=learning_topics, back_populates="learnings")
 
 
 class Conversation(Base):
@@ -64,6 +85,7 @@ class ChatMessage(Base):
     role = Column(String(50), nullable=False)      # "user" or "assistant"
     content = Column(Text, nullable=False)
     sources = Column(JSONB, nullable=True)          # JSON array of learning IDs referenced
+    follow_up_questions = Column(JSONB, nullable=True) # JSON array of suggested follow-ups
     created_at = Column(DateTime(timezone=True), server_default=func.now())
 
     # Relationships

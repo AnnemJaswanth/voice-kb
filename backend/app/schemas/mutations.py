@@ -100,13 +100,15 @@ class Mutation:
         result = await ask_chatbot(user_id=user.id, query=content, history=history, db=db)
         answer = result.get("answer", "I couldn't generate a response.")
         sources = result.get("sources", [])
+        follow_ups = result.get("follow_up_questions", [])
 
         # 3. Save assistant message response to database
         assistant_msg = ChatMessageModel(
             conversation_id=conversation_id,
             role="assistant",
             content=answer,
-            sources=sources
+            sources=sources,
+            follow_up_questions=follow_ups
         )
         db.add(assistant_msg)
         db.commit()
